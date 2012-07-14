@@ -14,60 +14,61 @@ define("YPFWP_MAX", 10);
 
 
 function ypfwp_curl_get_file($path) {
-	
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_POST, 0);
-	curl_setopt($ch,CURLOPT_URL, $path);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	 
-	$res = curl_exec($ch);
-	
-	curl_close($ch);
-	
-	return $res;
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_POST, 0);
+    curl_setopt($ch,CURLOPT_URL, $path);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+     
+    $res = curl_exec($ch);
+    
+    curl_close($ch);
+    
+    return $res;
 }
 
 
-function ypfwp_get_last_posts( $pipe_url, $cache_ttl ) {
-	
-	$cache = dirname(__FILE__) . "/pipe.json.cache";
-	
+function ypfwp_get_last_posts( $pipe_url, $cache_ttl, $id_slug ) {
+    
+    $cache = dirname(__FILE__) . "/{$id_slug}.pipe.json.cache";
+    
 
 
-	if( !file_exists($cache) || filemtime($cache) < (time() - $cache_ttl) ) {  
-		
-		$json = ypfwp_curl_get_file( $pipe_url );
-		$data = json_decode($json);
-		
-		if(isset($data->value->items)){
-						
-			$cachefile = fopen($cache, 'w');  
-			fwrite($cachefile, $json);  
-			fclose($cachefile);  
-			
-		} else {
-			$data = json_decode(file_get_contents($cache));
-		}
-	} else {  
-	
-		$data = json_decode(file_get_contents($cache));
-	
-	}
+    if( !file_exists($cache) || filemtime($cache) < (time() - $cache_ttl) ) {  
+        
+        $json = ypfwp_curl_get_file( $pipe_url );
+        $data = json_decode($json);
+        
+        if(isset($data->value->items)){
+                        
+            $cachefile = fopen($cache, 'w');  
+            fwrite($cachefile, $json);  
+            fclose($cachefile);  
+            
+        } else {
+            $data = json_decode(file_get_contents($cache));
+        }
+    } else {  
+    
+        $data = json_decode(file_get_contents($cache));
+    
+    }
 
-	return $data;	
+    return $data;   
 }
 
 
 function ypfwp_display_yahoo_pipe( $pipe_url = null, $cache_ttl = YPFWP_CACHE_TTL, $id_slug = null, $max = YPFWP_MAX ) {
-    if ( is_null($pipe_url)) return null;
+    if ( is_null( $pipe_url ) ) return null;
+    if ( is_null( $id_slug ) ) return null;
 
-	$data = ypfwp_get_last_posts( $pipe_url, $cache_ttl );
+    $data = ypfwp_get_last_posts( $pipe_url, $cache_ttl, $id_slug );
     
     echo "<div id=\"$id_slug\" >";
-	   echo '<ul class="postlinkslist">';
+       echo '<ul class="postlinkslist">';
 
-	$count = 0;
-	foreach( $data->value->items as $item ):
+    $count = 0;
+    foreach( $data->value->items as $item ):
 
         if ($count == $max) {
             break;
@@ -75,29 +76,29 @@ function ypfwp_display_yahoo_pipe( $pipe_url = null, $cache_ttl = YPFWP_CACHE_TT
             $count++;
         }
         
-		
-		$src = parse_url($item->{'y:id'}->value, PHP_URL_HOST);
-		$src = str_ireplace('www.', '', $src);
-		$src_class_name = str_ireplace('.', '-', $src);
-		
-		$desc = strip_tags($item->description);
-	?>
-	
-        	<li class="web-src-icon <?php echo $src_class_name; ?> item-<?php echo $count; ?>">
-            	
-    			<a href="<?php echo $item->link; ?>">
-                	<div class="web-src-icon"></div>
+        
+        $src = parse_url($item->{'y:id'}->value, PHP_URL_HOST);
+        $src = str_ireplace('www.', '', $src);
+        $src_class_name = str_ireplace('.', '-', $src);
+        
+        $desc = strip_tags($item->description);
+    ?>
+    
+            <li class="web-src-icon <?php echo $src_class_name; ?> item-<?php echo $count; ?>">
+                
+                <a href="<?php echo $item->link; ?>">
+                    <div class="web-src-icon"></div>
                     <?php echo $item->title; ?>
                     <span class=""> - <small><?php echo ypfwp_calc_time_diff(strtotime($item->pubDate)); ?></small></span>
                 </a>
             </li>
     
-	<?php	
-	endforeach; 
-	 
-	   echo "</ul>";
+    <?php   
+    endforeach; 
+     
+       echo "</ul>";
     echo "</div>";
-	
+    
 }
 
 
@@ -196,9 +197,9 @@ class Ypfwp_Yahoo_Pipe_Widget extends WP_Widget {
         $cache_ttl = strip_tags($instance['cache_ttl']);
         $max_item = strip_tags($instance['max_item']);
 ?>
-            <p><label for="<?php echo $this->get_field_id('id_slug'); ?>">Div ID: <input class="widefat" id="<?php echo $this->get_field_id('id_slug'); ?>" name="<?php echo $this->get_field_name('id_slug'); ?>" type="text" value="<?php echo attribute_escape($id_slug); ?>" /></label>
+            <p><label for="<?php echo $this->get_field_id('id_slug'); ?>">ID *: <input class="widefat" id="<?php echo $this->get_field_id('id_slug'); ?>" name="<?php echo $this->get_field_name('id_slug'); ?>" type="text" value="<?php echo attribute_escape($id_slug); ?>" /></label>
             </p>
-            <p><label for="<?php echo $this->get_field_id('pipe_url'); ?>">Pipe URL: <input class="widefat" id="<?php echo $this->get_field_id('pipe_url'); ?>" name="<?php echo $this->get_field_name('pipe_url'); ?>" type="text" value="<?php echo attribute_escape($pipe_url); ?>" /></label>
+            <p><label for="<?php echo $this->get_field_id('pipe_url'); ?>">Pipe URL *: <input class="widefat" id="<?php echo $this->get_field_id('pipe_url'); ?>" name="<?php echo $this->get_field_name('pipe_url'); ?>" type="text" value="<?php echo attribute_escape($pipe_url); ?>" /></label>
             </p>
             <p><label for="<?php echo $this->get_field_id('max_item'); ?>">Maximum: <input class="widefat" id="<?php echo $this->get_field_id('max_item'); ?>" name="<?php echo $this->get_field_name('max_item'); ?>" type="text" value="<?php echo attribute_escape($max_item); ?>" /></label>
                 <br><small>Maximum number of item to display.</small>
