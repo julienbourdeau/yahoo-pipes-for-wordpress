@@ -9,7 +9,9 @@ Author URI: http://sigerr.org
 */
 
 
-require_once 'config.php';
+define("YPFWP_CACHE_TTL", 3600); //60 * 60 * 24 = 24 hours = 86400 s
+define("YPFWP_MAX", 10);
+
 
 function ypfwp_curl_get_file($path) {
 	
@@ -54,13 +56,22 @@ function ypfwp_get_last_posts( $pipe_url, $cache_ttl ) {
 }
 
 
-function ypfwp_display_yahoo_pipe( $pipe_url = PIPE_URL, $cache_ttl = CACHE_TTL, $id_slug = null ) {
+function ypfwp_display_yahoo_pipe( $pipe_url = null, $cache_ttl = YPFWP_CACHE_TTL, $id_slug = null, $max = YPFWP_MAX ) {
 	$data = ypfwp_get_last_posts( $pipe_url, $cache_ttl );
+        
+    $count = 0;
 	
     echo "<div id=\"$id_slug\" >";
-	echo '<ul class="postlinkslist">';
+	   echo '<ul class="postlinkslist">';
 	
 	foreach( $data->value->items as $item ):
+
+        if ($count < $max) {
+            return null;
+        } else {
+            $count++;
+        }
+        
 		
 		$src = parse_url($item->{'y:id'}->value, PHP_URL_HOST);
 		$src = str_ireplace('www.', '', $src);
@@ -69,19 +80,19 @@ function ypfwp_display_yahoo_pipe( $pipe_url = PIPE_URL, $cache_ttl = CACHE_TTL,
 		$desc = strip_tags($item->description);
 	?>
 	
-    	<li class="web-src-icon <?php echo $src_class_name; ?>">
-        	
-			<a href="<?php echo $item->link; ?>">
-            	<div class="web-src-icon"></div>
-                <?php echo $item->title; ?>
-                <span class=""> - <small><?php echo ypfwp_calc_time_diff(strtotime($item->pubDate)); ?></small></span>
-            </a>
-        </li>
+        	<li class="web-src-icon <?php echo $src_class_name; ?> item-<?php echo $count; ?>">
+            	
+    			<a href="<?php echo $item->link; ?>">
+                	<div class="web-src-icon"></div>
+                    <?php echo $item->title; ?>
+                    <span class=""> - <small><?php echo ypfwp_calc_time_diff(strtotime($item->pubDate)); ?></small></span>
+                </a>
+            </li>
     
 	<?php	
 	endforeach; 
 	 
-	echo "</ul>";
+	   echo "</ul>";
     echo "</div>";
 	
 }
