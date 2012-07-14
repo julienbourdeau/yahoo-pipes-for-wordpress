@@ -57,17 +57,18 @@ function ypfwp_get_last_posts( $pipe_url, $cache_ttl ) {
 
 
 function ypfwp_display_yahoo_pipe( $pipe_url = null, $cache_ttl = YPFWP_CACHE_TTL, $id_slug = null, $max = YPFWP_MAX ) {
+    if ( is_null($pipe_url)) return null;
+
 	$data = ypfwp_get_last_posts( $pipe_url, $cache_ttl );
-        
-    $count = 0;
-	
+    
     echo "<div id=\"$id_slug\" >";
 	   echo '<ul class="postlinkslist">';
-	
+
+	$count = 0;
 	foreach( $data->value->items as $item ):
 
         if ($count == $max) {
-            return null;
+            break;
         } else {
             $count++;
         }
