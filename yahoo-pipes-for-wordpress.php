@@ -66,7 +66,7 @@ function ypfwp_display_yahoo_pipe( $pipe_url = null, $cache_ttl = YPFWP_CACHE_TT
 	
 	foreach( $data->value->items as $item ):
 
-        if ($count < $max) {
+        if ($count == $max) {
             return null;
         } else {
             $count++;
@@ -171,7 +171,7 @@ class Ypfwp_Yahoo_Pipe_Widget extends WP_Widget {
         extract($args, EXTR_SKIP);
         echo $before_widget;
 
-        ypfwp_display_yahoo_pipe( $instance['pipe_url'], $instance['cache_ttl'], $instance['id_slug'] );
+        ypfwp_display_yahoo_pipe( $instance['pipe_url'], $instance['cache_ttl'], $instance['id_slug'], $instance['max_item'] );
 
         echo $after_widget;
     }
@@ -181,18 +181,25 @@ class Ypfwp_Yahoo_Pipe_Widget extends WP_Widget {
         $instance['id_slug'] = strip_tags($new_instance['id_slug']);
         $instance['pipe_url'] = strip_tags($new_instance['pipe_url']);
         $instance['cache_ttl'] = strip_tags($new_instance['cache_ttl']);
+        $instance['max_item'] = strip_tags($new_instance['max_item']);
         return $instance;
     }
 
     function form($instance) {
         
-        $instance = wp_parse_args( (array) $instance, array( 'id_slug' => '', 'pipe_url' => '', 'cache_ttl' => '' ) );
+        $instance = wp_parse_args( (array) $instance, array( 'id_slug' => '', 'pipe_url' => '', 'cache_ttl' => '', 'max_item' => '' ) );
         $id_slug = strip_tags($instance['id_slug']);
         $pipe_url = strip_tags($instance['pipe_url']);
         $cache_ttl = strip_tags($instance['cache_ttl']);
+        $max_item = strip_tags($instance['max_item']);
 ?>
-            <p><label for="<?php echo $this->get_field_id('id_slug'); ?>">Div ID: <input class="widefat" id="<?php echo $this->get_field_id('id_slug'); ?>" name="<?php echo $this->get_field_name('id_slug'); ?>" type="text" value="<?php echo attribute_escape($id_slug); ?>" /></label></p>
-            <p><label for="<?php echo $this->get_field_id('pipe_url'); ?>">Pipe URL: <input class="widefat" id="<?php echo $this->get_field_id('pipe_url'); ?>" name="<?php echo $this->get_field_name('pipe_url'); ?>" type="text" value="<?php echo attribute_escape($pipe_url); ?>" /></label></p>
+            <p><label for="<?php echo $this->get_field_id('id_slug'); ?>">Div ID: <input class="widefat" id="<?php echo $this->get_field_id('id_slug'); ?>" name="<?php echo $this->get_field_name('id_slug'); ?>" type="text" value="<?php echo attribute_escape($id_slug); ?>" /></label>
+            </p>
+            <p><label for="<?php echo $this->get_field_id('pipe_url'); ?>">Pipe URL: <input class="widefat" id="<?php echo $this->get_field_id('pipe_url'); ?>" name="<?php echo $this->get_field_name('pipe_url'); ?>" type="text" value="<?php echo attribute_escape($pipe_url); ?>" /></label>
+            </p>
+            <p><label for="<?php echo $this->get_field_id('max_item'); ?>">Maximum: <input class="widefat" id="<?php echo $this->get_field_id('max_item'); ?>" name="<?php echo $this->get_field_name('max_item'); ?>" type="text" value="<?php echo attribute_escape($max_item); ?>" /></label>
+                <br><small>Maximum number of item to display.</small>
+            </p>
             <p><label for="<?php echo $this->get_field_id('cache_ttl'); ?>">Cache duration: <input class="widefat" id="<?php echo $this->get_field_id('cache_ttl'); ?>" name="<?php echo $this->get_field_name('cache_ttl'); ?>" type="text" value="<?php echo attribute_escape($cache_ttl); ?>" /></label>
                 <br><small>Duration in second: 3600 = 1 hour.</small>
             </p>
