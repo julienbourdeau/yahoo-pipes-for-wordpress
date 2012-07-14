@@ -28,13 +28,13 @@ function ypfwp_curl_get_file($path) {
 }
 
 
-function ypfwp_get_last_posts() {
+function ypfwp_get_last_posts( $pipe_url, $cache_ttl ) {
 	
-	$cache = dirname(__FILE__) . "/pipe.cache";
+	$cache = dirname(__FILE__) . "/pipe.json.cache";
 	
-	if( filemtime($cache) < (time() - CACHE_TTL) ) {  
+	if( file_exists($cache) && filemtime($cache) < (time() - $cache_ttl) ) {  
 		
-		$json = ypfwp_curl_get_file( PIPE_URL );
+		$json = ypfwp_curl_get_file( $pipe_url );
 		$data = json_decode($json);
 		
 		if(isset($data->value->items)){
@@ -56,9 +56,10 @@ function ypfwp_get_last_posts() {
 }
 
 
-function ypfwp_display_yahoo_pipe() {
-	$data = ypfwp_get_last_posts();
+function ypfwp_display_yahoo_pipe( $pipe_url = PIPE_URL, $cache_ttl = CACHE_TTL, $id_slug = null ) {
+	$data = ypfwp_get_last_posts( $pipe_url, $cache_ttl );
 	
+    echo "<div id=\"$id_slug\" >";
 	echo '<ul class="postlinkslist">';
 	
 	foreach( $data->value->items as $item ):
@@ -75,7 +76,7 @@ function ypfwp_display_yahoo_pipe() {
 			<a href="<?php echo $item->link; ?>">
             	<div class="web-src-icon"></div>
                 <?php echo $item->title; ?>
-                <span class=""> - <small><?php echo calc_time_diff(strtotime($item->pubDate)); ?></small></span>
+                <span class=""> - <small><?php echo ypfwp_calc_time_diff(strtotime($item->pubDate)); ?></small></span>
             </a>
         </li>
     
@@ -83,11 +84,12 @@ function ypfwp_display_yahoo_pipe() {
 	endforeach; 
 	 
 	echo "</ul>";
+    echo "</div>";
 	
 }
 
 
-function calc_time_diff($timestamp, $unit = NULL, $show_unit = TRUE) {
+function ypfwp_calc_time_diff($timestamp, $unit = NULL, $show_unit = TRUE) {
     $seconds = round((time() - $timestamp)); // How many seconds have elapsed
     $minutes = round((time() - $timestamp) / 60); // How many minutes have elapsed
     $hours = round((time() - $timestamp) / 60 / 60); // How many hours have elapsed
@@ -147,4 +149,50 @@ function calc_time_diff($timestamp, $unit = NULL, $show_unit = TRUE) {
     }
 }
 
-ypfwp_display_yahoo_pipe();
+//ypfwp_display_yahoo_pipe();
+
+
+class Ypfwp_Yahoo_Pipe_Widget extends WP_Widget {
+    function Ypfwp_Yahoo_Pipe_Widget(){
+        $widget_ops = array('classname' => 'ypfwp-yahoo-pipe-widget', 'description' => 'Display a yahoo pipe as a very nice list' );
+        $this->WP_Widget('ypfwp-yahoo-pipe-widget', 'Yahoo Pipe Widget', $widget_ops);
+    }
+    
+    function widget($args, $instance) {
+        extract($args, EXTR_SKIP);
+        echo $before_widget;
+
+        ypfwp_display_yahoo_pipe( $instance['pipe_url'], $instance['cache_ttl'], $instance['id_slug'] );
+
+        echo $after_widget;
+    }
+    
+    function update($new_instance, $old_instance) {
+        $instance = $old_instance;
+        $instance['id_slug'] = strip_tags($new_instance['id_slug']);
+        $instance['pipe_url'] = strip_tags($new_instance['pipe_url']);
+        $instance['cache_ttl'] = strip_tags($new_instance['cache_ttl']);
+        return $instance;
+    }
+
+    function form($instance) {
+        
+        $instance = wp_parse_args( (array) $instance, array( 'id_slug' => '', 'pipe_url' => '', 'cache_ttl' => '' ) );
+        $id_slug = strip_tags($instance['id_slug']);
+        $pipe_url = strip_tags($instance['pipe_url']);
+        $cache_ttl = strip_tags($instance['cache_ttl']);
+?>
+            <p><label for="<?php echo $this->get_field_id('id_slug'); ?>">Div ID: <input class="widefat" id="<?php echo $this->get_field_id('id_slug'); ?>" name="<?php echo $this->get_field_name('id_slug'); ?>" type="text" value="<?php echo attribute_escape($id_slug); ?>" /></label></p>
+            <p><label for="<?php echo $this->get_field_id('pipe_url'); ?>">Pipe URL: <input class="widefat" id="<?php echo $this->get_field_id('pipe_url'); ?>" name="<?php echo $this->get_field_name('pipe_url'); ?>" type="text" value="<?php echo attribute_escape($pipe_url); ?>" /></label></p>
+            <p><label for="<?php echo $this->get_field_id('cache_ttl'); ?>">Cache duration: <input class="widefat" id="<?php echo $this->get_field_id('cache_ttl'); ?>" name="<?php echo $this->get_field_name('cache_ttl'); ?>" type="text" value="<?php echo attribute_escape($cache_ttl); ?>" /></label>
+                <br><small>Duration in second: 3600 = 1 hour.</small>
+            </p>
+<?php
+    }
+        
+}
+
+function register_Ypfwp_Yahoo_Pipe_Widget(){
+    register_widget('Ypfwp_Yahoo_Pipe_Widget');
+}
+add_action('init', 'register_Ypfwp_Yahoo_Pipe_Widget', 1);
