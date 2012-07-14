@@ -32,14 +32,9 @@ function ypfwp_get_last_posts( $pipe_url, $cache_ttl ) {
 	
 	$cache = dirname(__FILE__) . "/pipe.json.cache";
 	
-    if( ! file_exists($cache) ){
-        $cachefile = fopen($cache, 'w');  
-        fwrite($cachefile, " ");  
-        fclose($cachefile); 
-    }
 
 
-	if( file_exists($cache) && filemtime($cache) < (time() - $cache_ttl) ) {  
+	if( !file_exists($cache) || filemtime($cache) < (time() - $cache_ttl) ) {  
 		
 		$json = ypfwp_curl_get_file( $pipe_url );
 		$data = json_decode($json);
