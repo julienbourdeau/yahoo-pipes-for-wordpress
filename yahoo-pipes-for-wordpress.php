@@ -11,8 +11,6 @@ Author URI: http://sigerr.org
 
 require_once 'config.php';
 
-// $pattern = 's|(http://)?(www\.)?([^.]*)\.(.*\.?)*|\3|p';
-
 function ypfwp_curl_get_file($path) {
 	
 	$ch = curl_init();
