@@ -87,7 +87,7 @@ function ypfwp_display_yahoo_pipe( $pipe_url = null, $cache_ttl = YPFWP_CACHE_TT
             <li class="web-src-icon <?php echo $src_class_name; ?> item-<?php echo $count; ?>">
                 
                 <a href="<?php echo $item->link; ?>">
-                    <div class="web-src-icon"></div>
+                    <span class="web-src-icon"></span>
                     <?php echo $item->title; ?>
                     <span class=""> - <small><?php echo ypfwp_calc_time_diff(strtotime($item->pubDate)); ?></small></span>
                 </a>
